@@ -1,0 +1,104 @@
+Darvas High (D_High)
+Inputs: High, Period (100)
+If (And (GE (Lag (High,3),Lag (Highest (High, Period),4)),
+GT (Lag (High,3),Highest (High,3))),Lag (High,3),Prev (1))
+Name: New Davras High Subvalue Def (NewD_HighSubDef)
+Inputs: High, Period (100)
+And (IsNotNull (D_High (High, Period)),
+IsNotNull (Lag (D_High (High, Period),2)))
+Name: New Darvas High (NewD_High)
+Inputs: High, Period (100)
+Add (And (NewD_HighSubDef (High, Period),
+Not (Lag (NewD_HighSubDef (High, Period),1))),
+And (D_High (High, Period),Change (D_High (High, Period),1)))
+Name: New Darvas Low Subvalue NDL (NewD_LowSubNDL)
+Inputs: High, Low, Period (100)
+And (LT (Lag (Low,3),Lowest (Low,3)),
+LT (Lowest (High,3),D_High (High, Period)))
+Name: New Darvas Low Subvalue Def (NewD_LowSubDef)
+Inputs: High, Period (100)
+And (IsNotNull (D_High (High, Period)),
+IsNotNull (Lag (D_High (High, Period),1)))
+Name: New Darvas Low (NewD_Low)
+Inputs: High, Low, Period (100)
+Add (And (NewD_LowSubDef (High, Period),
+Not (Lag (NewD_LowSubDef (High, Period),1))),
+And (NewD_LowSubNDL (High, Low, Period),
+LT (Lag (NewD_LowSubNDL (High, Low, Period),1),1)))
+Name: Darvas Low (D_Low)
+Inputs: High, Low, Period (100)
+If (NewD_Low (High, Low, Period),Lag (Low,3),Prev (1))
+Name: Darvas Box End Subvalue End (D_BoxEndSubEnd)
+Inputs: High, Low, Period (100)
+LT (BarsSinceUL (NewD_High (High, Period)),
+BarsSinceUL (Lag (NewD_Low (High, Low, Period),1)))
+Name: Darvas Box End Subvalue Def (D_BoxEndSubDef)
+Inputs: High, Low, Period (100)
+And (IsNotNull (D_BoxEndSubEnd (High, Low, Period)),
+IsNull (Lag (D_BoxEndSubEnd (High, Low, Period),1)))
+Name: Darvas Box End (D_BoxEnd)
+Inputs: High, Low, Period (100)
+Add (And (D_BoxEndSubDef (High, Low, Period),
+Not (Lag (D_BoxEndSubDef (High, Low, Period),1))),
+And (D_BoxEndSubEnd (High, Low, Period),
+NewD_Low (High, Low, Period)))
+Name: Darvas Box High Subvalue DBHI (D_BoxHighSubDBHI)
+Inputs: High, Low, Period (100)
+If (And (D_BoxEnd (High, Low, Period),
+IsNotNull (Lag (D_BoxEnd (High, Low, Period),1))),
+D_High (High, Period),Prev (1))
+Name: Darvas Box High (D_BoxHigh)
+Inputs: High, Low, Period (100)
+If (EQ (D_BoxHighSubDBHI (High, Low, Period),0),
+Add (High,0.0000001),D_BoxHighSubDBHI (High, Low, Period))
+Name: Darvas Box Low Subvalue BL (D_BoxLowSubBL)
+Inputs: High, Low, Period (100)
+If (And (D_BoxEnd (High, Low, Period),
+IsNotNull (Lag (D_BoxEnd (High, Low, Period),1))),
+D_Low (High, Low, Period),Prev (1))
+Name: Darvas Box Low (D_BoxLow)
+Inputs: High, Low, Period (100)
+If (EQ (D_BoxLowSubBL (High, Low, Period),0),
+Sub (Low,0.0000001),D_BoxLowSubBL (High, Low, Period))
+Name: Darvas Poss Sell Subvalue DSL (D_PossSellSubDSL)
+Inputs: High, Low, Period (100)
+LT (Low,D_BoxLow (High, Low, Period)
+Name: Darvas Poss Sell Subvalue Def (D_PossSellSubDef)
+Inputs: High, Low, Period (100)
+And (IsNotNull (D_PossSellSubDSL (High, Low, Period)),
+IsNotNull (Lag (D_PossSellSubDSL (High, Low, Period),1)))
+Name: Darvas Poss Sell (D_PossSell)
+Inputs: High, Low, Period (100)
+Add (And (D_PossSellSubDef (High, Low, Period),
+Not (Lag (D_PossSellSubDef (High, Low, Period),1))),
+And (D_PossSellSubDSL (High, Low, Period),
+LT (Lag (D_PossSellSubDSL (High, Low, Period),1),
+D_PossSellSubDSL (High, Low, Period))))
+Name: Darvas Sell Subvalue Sell (D_SellSubSell)
+Inputs: High, Low, Period (100)
+LT (BarsSinceUL (D_BoxEnd (High, Low, Period)),
+BarsSinceUL (D_PossSell (High, Low, Period)))
+Name: Darvas Sell Subvalue Def (D_SellSubDef)
+Inputs: High, Low, Period (100)
+And (IsNotNull (D_SellSubSell (High, Low, Period)),
+IsNotNull (Lag (D_SellSubSell (High, Low, Period),1)))
+Name: Darvas Sell (D_Sell)
+Inputs: High, Low, Period (100)
+Add (And (D_SellSubDef (High, Low, Period),
+Not (Lag (D_SellSubDef (High,Low, Period),1))),
+And (Not (D_SellSubSell (High, Low, Period)),
+Lag (D_SellSubSell (High, Low, Period),1)))
+Name: Darvas Buy Subvalue DTO (D_BuySubDTO)
+Inputs: Close, High, Low, Period (100)
+If (And (And (GT (Close,D_BoxHigh (High, Low, Period)),
+LT (BarsSinceUL(D_BoxEnd (High, Low, Period)),
+BarsSinceUL (D_Sell (High, Low, Period)))),
+EQ (Prev (1),0)),1,If (D_Sell (High, Low, Period),0,Prev (1)))
+Name: Darvas Buy (D_Buy)
+Inputs: Close, High, Low, Period (100)
+And (D_BuySubDTO (Close, High, Low, Period),
+EQ (Lag (D_BuySubDTO (Close,High, Low, Period),1),0))
+Name: Darvas Box System
+Inputs: Close, High, Low, Period (100)
+Enter Long: D_Buy(Close, High, Low, Period)
+Exit Long: D_Sell(High, Low, Period)

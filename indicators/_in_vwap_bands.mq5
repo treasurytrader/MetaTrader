@@ -131,40 +131,15 @@ int OnCalculate(const int rates_total, const int prev_calculated,
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-#ifdef __MQL5__
+
 int TimeDay(datetime dt) {
+
    MqlDateTime dt_struct;
    TimeToStruct(dt, dt_struct);
+
    return (dt_struct.day);
 }
-#endif
+
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-/* 예스트레이더용
-// _vwap_bands :: 표준편차 계산에서 for 루틴을 제거한 버전
-
-if (bdate[1] != bdate) then {
-   value1 = avg(high, low, close);
-   value2 = volume * value1 * value1;
-   value3 = volume * value1;
-   value4 = volume;
-}
-else {
-   value1 = avg(high, low, close);
-   value2 = value2[1] + (volume * value1 * value1);
-   value3 = value3[1] + (volume * value1);
-   value4 = value4[1] + volume;
-}
-
-value10 = value3 / value4;
-
-value5	= squareroot(max((value2 / value4) - (value10 * value10), 0));
-
-value11 = value10 + value5;
-value12 = value10 - value5;
-
-plot1(value10, "vwap");
-plot2(value11, "upper");
-plot3(value12, "lower");
-*/

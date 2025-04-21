@@ -3,7 +3,6 @@
 //|                                                                  |
 //+------------------------------------------------------------------+
 
-#property strict
 #property indicator_chart_window
 
 #property indicator_buffers 6
@@ -39,13 +38,6 @@ int OnInit() {
    SetIndexBuffer(4, buffer4);
    SetIndexBuffer(5, buffer5);
 
-   ArraySetAsSeries(buffer0, true);
-   ArraySetAsSeries(buffer1, true);
-   ArraySetAsSeries(buffer2, true);
-   ArraySetAsSeries(buffer3, true);
-   ArraySetAsSeries(buffer4, true);
-   ArraySetAsSeries(buffer5, true);
-
    return (INIT_SUCCEEDED);
 }
 
@@ -77,51 +69,46 @@ int OnCalculate(const int rates_total, const int prev_calculated,
                 const double &high[], const double &low[],
                 const double &close[], const long &tick_volume[],
                 const long &volume[], const int &spread[]) {
-#ifdef __MQL5__
-   ArraySetAsSeries( time, true);
-   ArraySetAsSeries( high, true);
-   ArraySetAsSeries(  low, true);
-   ArraySetAsSeries(close, true);
-#endif
 
    if (!prev_calculated) {
 
-      int    i   = rates_total - 1;
-      double val = (high[i] + low[i] + close[i]) / 3.0;
-      double vol = (double)fmax(tick_volume[i], 1);
+      double val = (high[0] + low[0] + close[0]) / 3.0;
+      double vol = (double)fmax(tick_volume[0], 1);
 
-      buffer3[i] = vol * val * val;
-      buffer4[i] = vol * val;
-      buffer5[i] = vol;
+      buffer3[0] = vol * val * val;
+      buffer4[0] = vol * val;
+      buffer5[0] = vol;
 
-      buffer0[i] = buffer4[i] / buffer5[i];
+      buffer0[0] = buffer4[0] / buffer5[0];
 
-      double dev = sqrt(fmax((buffer3[i] / buffer5[i]) - (buffer0[i] * buffer0[i]), 0));
+      double dev = sqrt(fmax((buffer3[0] / buffer5[0]) - (buffer0[0] * buffer0[0]), 0));
 
-      buffer1[i] = buffer0[i] + dev;
-      buffer2[i] = buffer0[i] - dev;
-      // for (int i = rates_total - 1, k = rates_total - 13; k <= i; i--) {}
+      buffer1[0] = buffer0[0] + dev;
+      buffer2[0] = buffer0[0] - dev;
+
    }
 
-   for (int i = rates_total - (prev_calculated ? prev_calculated : 2); 0 <= i; i--) {
+   for (int i = (prev_calculated ? prev_calculated - 1 : 1); rates_total > i; i++) {
 
       double val = (high[i] + low[i] + close[i]) / 3.0;
       double vol = (double)fmax(tick_volume[i], 1);
 
-      if (TimeDay(time[i + 1]) != TimeDay(time[i])) {
+      if (TimeDay(time[i - 1]) != TimeDay(time[i])) {
 
          buffer3[i] = vol * val * val;
          buffer4[i] = vol * val;
          buffer5[i] = vol;
 
-         PlotIndexSetInteger(0, PLOT_DRAW_BEGIN, rates_total - i - 1);
-         PlotIndexSetInteger(1, PLOT_DRAW_BEGIN, rates_total - i - 1);
-         PlotIndexSetInteger(2, PLOT_DRAW_BEGIN, rates_total - i - 1);
+         PlotIndexSetInteger(0, PLOT_DRAW_BEGIN, i);
+         PlotIndexSetInteger(1, PLOT_DRAW_BEGIN, i);
+         PlotIndexSetInteger(2, PLOT_DRAW_BEGIN, i);
 
       } else {
-         buffer3[i] = buffer3[i + 1] + (vol * val * val);
-         buffer4[i] = buffer4[i + 1] + (vol * val);
-         buffer5[i] = buffer5[i + 1] + vol;
+
+         buffer3[i] = buffer3[i - 1] + (vol * val * val);
+         buffer4[i] = buffer4[i - 1] + (vol * val);
+         buffer5[i] = buffer5[i - 1] + vol;
+
       }
 
       buffer0[i] = buffer4[i] / buffer5[i];

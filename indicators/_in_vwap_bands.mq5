@@ -113,12 +113,6 @@ int OnCalculate(const int rates_total, const int prev_calculated,
 
       buffer0[i] = buffer4[i] / buffer5[i];
 
-      //--- standard deviation
-      /*
-      double dev = 0.0;
-      for (int k = 0; buffer5[i] > k; k++) dev += pow(close[i + k] - buffer0[i], 2);
-      dev = sqrt(dev / buffer5[i]);
-      */
       double dev = sqrt(fmax((buffer3[i] / buffer5[i]) - (buffer0[i] * buffer0[i]), 0));
 
       buffer1[i] = buffer0[i] + dev;
